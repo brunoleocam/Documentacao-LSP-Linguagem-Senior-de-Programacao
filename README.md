@@ -5325,6 +5325,8 @@ EstaNulo(<variavel>, <resultado>);
 - `variavel`: Variável a ser verificada
 - `resultado`: Variável numérica que receberá 1 se nula, 0 se não nula
 
+**Nota (tipo do primeiro parâmetro):** em muitos ambientes Senior o compilador expõe `EstaNulo` com o primeiro argumento como **Alfa** (`VARSTR`). Para valor **Data** após `AlfaParaData`, não use `EstaNulo` na `Data`: valide com `Se (vdData <> 0)` (data inválida ou vazia costuma resultar em zero) ou trate a **string** antes da conversão.
+
 **Exemplo:**
 
 ```lsp
