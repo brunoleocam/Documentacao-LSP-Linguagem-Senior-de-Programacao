@@ -3454,6 +3454,35 @@ vnInteiro = 123;
 IntParaAlfa(vnInteiro, vaTexto); @ vaTexto será "123" @
 ```
 
+**⚠️ Valores com parte decimal:** `IntParaAlfa` despreza as casas decimais do tipo `Numero`. Para exibir ou concatenar valores fracionários, use **`DecimalParaAlfa`**.
+
+### DecimalParaAlfa
+
+Converte um valor numérico (`Numero`) para alfanumérico **preservando a parte decimal** na string resultante (formato exibido conforme o ambiente).
+
+**Sintaxe:**
+
+```lsp
+DecimalParaAlfa(<numero>, <texto>);
+```
+
+**Parâmetros:**
+
+- `numero`: Valor do tipo `Numero` (inteiro ou com decimais)
+- `texto`: Variável `Alfa` que receberá a representação textual
+
+**Exemplo:**
+
+```lsp
+Definir Numero vnValor;
+Definir Alfa vaTexto;
+
+vnValor = 123.45;
+DecimalParaAlfa(vnValor, vaTexto); @ vaTexto adequado para exibir o decimal @
+```
+
+**⚠️ Importante:** Para mensagens e logs com quantidades monetárias, pesos, preços ou qualquer `Numero` não inteiro, prefira **`DecimalParaAlfa`** em vez de **`IntParaAlfa`**, para não perder casas decimais na conversão.
+
 ### StrParaInt
 
 Converte um valor alfanumérico (string) para o tipo Inteiro. Esta função é equivalente a `AlfaParaInt` e é mantida para compatibilidade.
@@ -4460,6 +4489,8 @@ Esta função arredonda um valor, conforme a precisão informada.
 Arredonda(<valor>, <decimais>);
 ```
 
+OBS: a assinatura é descrita como `Arredonda(Numero End Valor, Numero Decimais)` — ou seja, o **primeiro parâmetro é a variável que recebe o valor já arredondado** (efeito in-place sobre essa variável).
+
 **Parâmetros:**
 
 - `valor`: Variável que será arredondada
@@ -4520,6 +4551,8 @@ Esta função arredonda determinado valor, conforme a precisão informada.
 ```lsp
 ArredondarValor(<valorVariavel>, <precisao>);
 ```
+
+**`ArredondarValorEx`:** em ambiente de teste, costuma apresentar o **mesmo comportamento** que `ArredondarValor`; padronize uma das duas no código.
 
 **Parâmetros:**
 
@@ -5738,15 +5771,84 @@ As funções numéricas na LSP permitem realizar operações matemáticas comple
 
 ### Arredondamento e Truncamento
 
-#### Arredondar
+#### Arredondamento
 
-Arredonda um número para um número específico de casas decimais.
+- **`Arredonda`**: `Arredonda(Numero End Valor, Numero Decimais)`; o valor arredondado fica na **mesma variável** do primeiro parâmetro. Preferir **`Decimais`** em variável `Numero` (ex.: `vnCasas`), não literal, se o depurador ou o compilador forem sensíveis.
+- **`ArredondaABNT`**: mesma forma geral que `Arredonda`, com regra ABNT.
+- **`ArredondarValor`**: `ArredondarValor(Valor, Qtde_Casas)`.
+- **`ArredondarValorEx`** — em vários ambientes, **mesmo comportamento** que `ArredondarValor`; padronize uma no código.
+- **`ArredondaValorTipoAcerto`**: nome **com espaços**; tipos 1 e 2 conforme manual.
 
-**Sintaxe:**
+**Exemplo — `Arredonda`:**
 
 ```lsp
-Arredondar(<numero>, <casasDecimais>, <resultado>);
+Definir Numero vnValor;
+Definir Numero vnCasas;
+
+vnValor = 1577.87;
+vnCasas = 1;
+Arredonda(vnValor, vnCasas);
+@ vnValor reflete o arredondamento (ex.: uma casa decimal) @
+
+vnCasas = 0;
+Arredonda(vnValor, vnCasas);
+@ arredondamento na parte inteira quando Qtde_Casas = 0 @
 ```
+
+**Exemplo — `ArredondaABNT`:**
+
+```lsp
+Definir Numero vnValor;
+Definir Numero vnCasas;
+
+vnValor = 1577.87;
+vnCasas = 1;
+ArredondaABNT(vnValor, vnCasas);
+@ regra ABNT; resultado em vnValor @
+```
+
+**Exemplo — `ArredondarValor`:**
+
+```lsp
+Definir Numero vnValor;
+Definir Numero vnCasas;
+
+vnValor = 1577.87;
+vnCasas = 1;
+ArredondarValor(vnValor, vnCasas);
+@ vnValor passa a 1577,90 (conforme doc); Qtde_Casas = 0 arredonda parte inteira @
+```
+
+**Exemplo — `ArredondarValorEx`:**
+
+```lsp
+@ Em muitos ambientes equivale a ArredondarValor @
+Definir Numero vnValor;
+Definir Numero vnCasas;
+
+vnValor = 1577.87;
+vnCasas = 2;
+ArredondarValorEx(vnValor, vnCasas);
+```
+
+**Exemplo — `ArredondaValorTipoAcerto`:**
+
+```lsp
+Definir Numero vnValor;
+Definir Numero vnTipoAcerto;
+
+vnValor = 1475.12845;
+vnTipoAcerto = 1;
+ArredondaValorTipoAcerto(vnValor, vnTipoAcerto);
+@ Tipo 1: arredonda para duas casas decimais (ex.: 1475,13 na doc) @
+
+vnValor = 1475.12845;
+vnTipoAcerto = 2;
+ArredondaValorTipoAcerto(vnValor, vnTipoAcerto);
+@ Tipo 2: ignora a terceira casa decimal (ex.: 1475,12 na doc) @
+```
+
+Versões e produtos no portal podem diferir (ERP vs HCM); validar sempre na versão do seu sistema.
 
 #### Truncar
 
@@ -5793,33 +5895,37 @@ vnPorcentagem = 15.5;
 calculosFinanceiros();
 
 Funcao calculosFinanceiros(); {
-  @ Arredonda para 2 casas decimais (padrão monetário) @
-  Arredondar(vnValorOriginal, 2, vnValorArredondado);
+  Definir Numero vnPrecisao2;
   Definir Alfa vaValorArredondadoStr;
-  IntParaAlfa(vnValorArredondado, vaValorArredondadoStr);
-  Definir Alfa vaMensagem;
+  Definir Alfa vaValorTruncadoStr;
+  Definir Alfa vaDescontoStr;
+  Definir Alfa vaValorFinalStr;
+
+  vnPrecisao2 = 2;
+
+  @ Arredonda para 2 casas (Arredondar de 3 parametros nao existe no LSP) @
+  vnValorArredondado = vnValorOriginal;
+  ArredondarValor(vnValorArredondado, vnPrecisao2);
+  DecimalParaAlfa(vnValorArredondado, vaValorArredondadoStr);
   vaMensagem = "Valor arredondado: R$ " + vaValorArredondadoStr;
   Mensagem(Retorna, vaMensagem);
   
   @ Trunca para inteiro @
   vnValorTruncado = Truncar(vnValorOriginal);
-  Definir Alfa vaValorTruncadoStr;
   IntParaAlfa(vnValorTruncado, vaValorTruncadoStr);
   vaMensagem = "Valor truncado: R$ " + vaValorTruncadoStr;
   Mensagem(Retorna, vaMensagem);
   
   @ Calcula desconto @
   vnDesconto = (vnValorOriginal * vnPorcentagem) / 100;
-  Arredondar(vnDesconto, 2, vnDesconto);
+  ArredondarValor(vnDesconto, vnPrecisao2);
   
   @ Valor final @
   vnValorFinal = vnValorOriginal - vnDesconto;
-  Arredondar(vnValorFinal, 2, vnValorFinal);
+  ArredondarValor(vnValorFinal, vnPrecisao2);
   
-  Definir Alfa vaDescontoStr;
-  Definir Alfa vaValorFinalStr;
-  IntParaAlfa(vnDesconto, vaDescontoStr);
-  IntParaAlfa(vnValorFinal, vaValorFinalStr);
+  DecimalParaAlfa(vnDesconto, vaDescontoStr);
+  DecimalParaAlfa(vnValorFinal, vaValorFinalStr);
   
   vaMensagem = "Desconto aplicado: R$ " + vaDescontoStr;
   Mensagem(Retorna, vaMensagem);
@@ -15201,4 +15307,4 @@ Mensagem(Retorna, vaMensagem);
 
 - **Fim da Documentação LSP - Linguagem Senior de Programação**
 
-- *Desenvolvido em colaboração | Atualizado em 2025*
+- *Desenvolvido em colaboração | Atualizado em 07-05-2026*
