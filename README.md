@@ -9437,6 +9437,18 @@ Funcao exemploCursorCompleto(); {
 
 **⚠️ IMPORTANTE:** Sempre feche e destrua o cursor após o uso. Para INNER JOIN / subquery / SQL nativo: `SQL_UsarAbrangencia(cursor, 0)` + `SQL_UsarSQLSenior2(cursor, 0)` antes do comando.
 
+**Dois modos — não misturar:**
+
+| | Cursor simples | Cursor completo |
+|--|----------------|-----------------|
+| Declaração | `Definir Cursor Cur_X;` | `Definir Alfa vaX;` + `SQL_Criar(vaX)` |
+| Comando | `Cur_X.SQL "…"` | `SQL_DefinirComando(vaX, …)` |
+| Abrir / fechar | `Cur_X.AbrirCursor()` / `.FecharCursor()` | `SQL_AbrirCursor(vaX)` / `SQL_FecharCursor(vaX)` |
+| Loop | `Cur_X.Achou` / `.Proximo()` | `SQL_EOF(vaX)` / `SQL_Proximo(vaX)` |
+| Limpeza | só fechar | `SQL_FecharCursor` + **`SQL_Destruir`** (sempre no **final** do uso) |
+
+`SQL_Criar` + `SQL_AbrirCursor` **é o par correto** do cursor completo. Errado é usar `.AbrirCursor` no handle de `SQL_Criar`, ou `SQL_*` em `Definir Cursor`.
+
 ### Vantagens e Desvantagens dos Cursores
 
 #### Cursor Simples
@@ -15352,4 +15364,4 @@ Mensagem(Retorna, vaMensagem);
 
 - **Fim da Documentação LSP - Linguagem Senior de Programação**
 
-- *Desenvolvido em colaboração | Atualizado em 07-05-2026*
+- *Desenvolvido em colaboração | Atualizado em 17-09-2026*
