@@ -9391,8 +9391,8 @@ Funcao exemploCursorCompleto(); {
   
   @ ===== 2. CRIAÇÃO E CONFIGURAÇÃO DO CURSOR ===== @
   SQL_Criar(xCursor);
-  SQL_UsarSQLSenior2(xCursor, 0);           @ 0 = SQL Nativo, 1 = SQL Senior @
-  SQL_UsarAbrangencia(xCursor, 0);          @ 0 = Sem abrangência, 1 = Com abrangência @
+  SQL_UsarAbrangencia(xCursor, 0);          @ 0 = Sem abrangência (obrigatório com SQL nativo) @
+  SQL_UsarSQLSenior2(xCursor, 0);           @ 0 = SQL Nativo, ≠0 = SQL Senior 2; sempre antes de DefinirComando @
   SQL_DefinirComando(xCursor, vaSQL);
   
   @ ===== 3. ABERTURA E EXECUÇÃO DO CURSOR ===== @
@@ -9428,13 +9428,14 @@ Funcao exemploCursorCompleto(); {
 
 **📋 Estrutura Padrão do Cursor Completo:**
 
-1. **Preparação:** Montar SQL com placeholders se necessário
-2. **Criação:** `SQL_Criar()` + configurações
-3. **Abertura:** `SQL_AbrirCursor()`
-4. **Iteração:** `Enquanto (SQL_EOF() = 0)` + `SQL_Proximo()`
-5. **Finalização:** `SQL_FecharCursor()` + `SQL_Destruir()`
+1. **Preparação:** Montar SQL com placeholders (`:var`) se necessário
+2. **Criação:** `Definir Alfa` + `SQL_Criar()` + (opcional) `SQL_UsarAbrangencia` / `SQL_UsarSQLSenior2` **antes** de `SQL_DefinirComando`
+3. **Comando:** `SQL_DefinirComando()` + binds (`SQL_Definir*`)
+4. **Abertura:** `SQL_AbrirCursor()`
+5. **Iteração:** `Enquanto (SQL_EOF() = 0)` + `SQL_Proximo()`
+6. **Finalização:** `SQL_FecharCursor()` + `SQL_Destruir()`
 
-**⚠️ IMPORTANTE:** Sempre feche e destrua o cursor após o uso para liberar recursos do banco de dados.
+**⚠️ IMPORTANTE:** Sempre feche e destrua o cursor após o uso. Para INNER JOIN / subquery / SQL nativo: `SQL_UsarAbrangencia(cursor, 0)` + `SQL_UsarSQLSenior2(cursor, 0)` antes do comando.
 
 ### Vantagens e Desvantagens dos Cursores
 
@@ -10170,6 +10171,50 @@ As funções a seguir podem ser utilizadas para manipulação de comandos SQL e 
 | FinalizarTransacao  | Finaliza a transação no banco de dados executando COMMIT. |
 | DesfazerTransacao   | Desfaz a transação no banco de dados executando ROLLBACK. |
 
+### Ciclo de vida do cursor SQL (`SQL_Criar`)
+
+O parâmetro de `SQL_Criar` **deve ser variável `Definir Alfa`** (o handle do cursor). Não use `Numero`, `Data` ou `Lista`.
+
+**Ordem obrigatória:**
+
+1. `Definir Alfa xCursor;`
+2. `SQL_Criar(xCursor);`
+3. Se SQL nativo / `JOIN` / subquery: `SQL_UsarAbrangencia(xCursor, 0)` + `SQL_UsarSQLSenior2(xCursor, 0)` (**obrigatório** nesses casos; senão pode omitir — o padrão do cursor é SQL Senior 2)
+4. `SQL_DefinirComando(xCursor, …);` — só depois do passo 3, se houver
+5. Binds (`SQL_DefinirAlfa` / `SQL_DefinirInteiro` / …) se houver `:param`
+6. `SQL_AbrirCursor(xCursor);` — abre a transação/conexão e executa o comando já definido
+7. Leitura / loop (`SQL_EOF`, `SQL_Retornar*`, `SQL_Proximo`)
+8. `SQL_FecharCursor(xCursor);` + `SQL_Destruir(xCursor);` — sempre ao terminar (evita vazamento / travamento de transação)
+
+**Agregados (`COUNT`, `SUM`, …):** use **alias** no SELECT e o mesmo nome em `SQL_Retornar*` (ex.: `COUNT(*) AS conta` → `SQL_RetornarInteiro(xCursor, "conta", vnConta)`).
+
+**SQL nativo, INNER JOIN, subquery:** por padrão o cursor usa SQL Senior 2. Para sintaxe nativa (ou recursos não suportados no Senior 2), chame **antes** de `SQL_DefinirComando`:
+
+```lsp
+SQL_Criar(xCursor);
+SQL_UsarAbrangencia(xCursor, 0);   @ obrigatório com SQL nativo @
+SQL_UsarSQLSenior2(xCursor, 0);    @ 0 = nativo; ≠0 = Senior 2 @
+SQL_DefinirComando(xCursor, …);
+```
+
+Cursores de `SQL_Criar` **não** herdam a flag global da regra sobre SQL Senior 2 — só o que `SQL_UsarSQLSenior2` definir. Sem desabilitar abrangência com SQL nativo, o runtime interrompe com erro de abrangência (*Não é suportado o uso de abrangência de usuário com SQL nativo*).
+
+**Quando é obrigatório (heurística / plugin SQL008):** se o comando contém `JOIN` (INNER/LEFT/…) ou subquery (`(SELECT …)`, `EXISTS (SELECT…)`, `IN (SELECT…)`), o Senior 2 costuma falhar (ex.: *subqueries não são permitidas aqui*). Use o par `UsarAbrangencia(0)` + `UsarSQLSenior2(0)` **antes** do `SQL_DefinirComando`.
+
+```lsp
+@ ❌ Senior 2 — subquery / JOIN sem nativo @
+SQL_Criar(xCursor);
+SQL_DefinirComando(xCursor, "SELECT a.CODEMP, (SELECT COUNT(*) FROM E085HCL b WHERE b.CODEMP = a.CODEMP) FROM E070FIL a");
+
+@ ✅ Nativo — ordem correta @
+SQL_Criar(xCursor);
+SQL_UsarAbrangencia(xCursor, 0);
+SQL_UsarSQLSenior2(xCursor, 0);
+SQL_DefinirComando(xCursor, "SELECT a.CODEMP, (SELECT COUNT(*) FROM E085HCL b WHERE b.CODEMP = a.CODEMP) FROM E070FIL a");
+```
+
+**Runtime (não detectável estaticamente):** se `UPDATE`/`DELETE` via cursor não afetar registros, o Sapiens pode exibir mensagem e cancelar a regra — isso não é diagnóstico do plugin.
+
 ### Placeholders SQL - Regra de Segurança
 
 **🚨 REGRA CRÍTICA DE SEGURANÇA:** **NUNCA concatene variáveis diretamente em strings SQL. SEMPRE utilize placeholders de parâmetros (`:variavel`) para evitar SQL Injection e garantir performance.**
@@ -10268,8 +10313,8 @@ Funcao exemploPlaceholdersSQL(); {
   
   @ Configurar cursor @
   SQL_Criar(xCursor);
-  SQL_UsarSQLSenior2(xCursor, 0);
   SQL_UsarAbrangencia(xCursor, 0);
+  SQL_UsarSQLSenior2(xCursor, 0);
   SQL_DefinirComando(xCursor, vaSQL);
   
   @ Configurar parâmetros @
