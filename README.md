@@ -3848,7 +3848,7 @@ vnSegundos = ((vnParteFracionaria * 24 - vnHoras) * 60 - vnMinutos) * 60;
 
 #### CodData
 
-Possibilita a composição de uma data, montando-a através de dia, mês e ano.
+Possibilita a composição de uma data, montando-a através de dia, mês e ano. **Retorna** a data (usar em atribuição).
 
 **Sintaxe:**
 
@@ -3879,7 +3879,7 @@ vdData = CodData(vnDia, vnMes, vnAno);
 
 #### MontaData
 
-Esta função concatena três variáveis, formando uma data. É uma alternativa ao CodData com sintaxe diferente.
+Esta função concatena três variáveis, formando uma data. Diferente de `CodData` (que **retorna** a data), `MontaData` grava o resultado no **4º parâmetro**.
 
 **Sintaxe:**
 
@@ -4079,7 +4079,7 @@ validarDataNascimento();
 
 Funcao validarDataNascimento(); {
   @ 1. Monta a data @
-  CodData(vnDia, vnMes, vnAno, vdDataNascimento);
+  vdDataNascimento = CodData(vnDia, vnMes, vnAno);
   
   @ 2. Obtém data atual para validação @
   DataHoje(vdDataAtual);
@@ -5096,8 +5096,8 @@ validarPeriodo();
 
 Funcao validarPeriodo(); {
   @ 1. Monta as datas @
-  CodData(vnDiaInicio, vnMesInicio, vnAnoInicio, vdDataInicio);
-  CodData(vnDiaFim, vnMesFim, vnAnoFim, vdDataFim);
+  vdDataInicio = CodData(vnDiaInicio, vnMesInicio, vnAnoInicio);
+  vdDataFim = CodData(vnDiaFim, vnMesFim, vnAnoFim);
   DataHoje(vdDataAtual);
   
   @ 2. Validações @
