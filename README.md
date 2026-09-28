@@ -25,7 +25,7 @@
 
 <table>
 <tr>
-<td valign="top" width="88">
+<td valign="middle" width="88">
 <img src="https://raw.githubusercontent.com/brunoleocam/lsp-workbench/main/assets/icon.png" alt="Logo do LSP Workbench" width="72" />
 </td>
 <td valign="top">
