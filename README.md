@@ -23,16 +23,21 @@
 
 ---
 
-## 🛠️ **LSP Workbench**
-
+<table>
+<tr>
+<td valign="top" width="88">
 <img src="https://raw.githubusercontent.com/brunoleocam/lsp-workbench/main/assets/icon.png" alt="Logo do LSP Workbench" width="72" />
-
-Extensão para **VS Code** e **Cursor** com suporte à **Linguagem Senior de Programação (LSP)**: syntax highlighting, snippets, autocomplete, hover, formatação e validação ao editar arquivos `.lsp` e `.lspt` no ecossistema Senior (Sapiens, HCM e afins).
-
-A extensão também inclui um harness para agentes (Cursor e GitHub Copilot) interpretarem e gerarem código LSP no padrão da linguagem.
-
-- [Repositório no GitHub](https://github.com/brunoleocam/lsp-workbench)
-- [Página da extensão no Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brunoleocam.lsp-workbench)
+</td>
+<td valign="top">
+<h2><strong>LSP Workbench</strong></h2>
+<p>Extensão para VS Code e Cursor com suporte à Linguagem Senior de Programação (LSP): syntax highlighting, snippets, autocomplete, hover, formatação e validação no ecossistema Senior (Sapiens, HCM e afins), com harness para agentes (Cursor e GitHub Copilot) interpretarem e gerarem código LSP no padrão da linguagem.</p>
+<ul>
+<li><a href="https://github.com/brunoleocam/lsp-workbench">GitHub</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=brunoleocam.lsp-workbench">Visual Studio Marketplace</a></li>
+</ul>
+</td>
+</tr>
+</table>
 
 ---
 
