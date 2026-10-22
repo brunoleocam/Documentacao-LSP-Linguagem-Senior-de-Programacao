@@ -12238,6 +12238,110 @@ ListaSecao("Adicional_1");
 
 **⚠️ Observação:** Esta função já estava documentada anteriormente no arquivo, mas é incluída aqui para completude da seção de funções específicas do Gerador de Relatórios.
 
+### **ExecutaRelatorio**
+
+Executa modelos de relatório a partir de regras. A assinatura muda entre os sistemas:
+
+| Sistema | Sintaxe | Ordenação |
+|---------|---------|-----------|
+| ERP (Gestão Empresarial) | `ExecutaRelatorio(Alfa pNomRel, Alfa pTelEnt, Alfa pNomOrd);` | Terceiro parâmetro (opcional, informar `""`) |
+| HCM (Gestão de Pessoas) | `ExecutaRelatorio(Alfa NomeModelo, Alfa ExibirTelaEntrada);` | Não existe |
+
+#### **ERP — ExecutaRelatorio**
+
+Executa modelos de Relatórios, Notas Fiscais, Cheques, Duplicatas etc.
+
+**Sintaxe:**
+
+```lsp
+ExecutaRelatorio(Alfa pNomRel, Alfa pTelEnt, Alfa pNomOrd);
+```
+
+**Parâmetros:**
+
+| Nome | Tipo | Descrição |
+|------|------|-----------|
+| `pNomRel` | Alfa | Nome do modelo (ex.: `"CDCG010.GER"`). |
+| `pTelEnt` | Alfa | Indica se a tela de entrada deve ser apresentada: `"S"` = Sim, `"N"` = Não. |
+| `pNomOrd` | Alfa | **Opcional.** Nome da ordenação definida no modelo. Quando não for usar, informe somente as aspas (`""`). Se o modelo tiver ordenações e o nome não for informado, é selecionada a primeira ordenação da lista. |
+
+**Exemplos:**
+
+```lsp
+@ Com ordenação específica @
+ExecutaRelatorio("CDCG010.GER", "S", "Código");
+
+@ Sem ordenação: passa só as aspas; o modelo usa a primeira ordenação da lista @
+ExecutaRelatorio("CDCG010.GER", "S", "");
+```
+
+```lsp
+Definir Alfa vaNomRel;
+Definir Alfa vaTelEnt;
+Definir Alfa vaNomOrd;
+
+vaNomRel = "CDCG010.GER";
+vaTelEnt = "N";
+vaNomOrd = "Código";
+ExecutaRelatorio(vaNomRel, vaTelEnt, vaNomOrd);
+```
+
+#### **HCM — ExecutaRelatorio**
+
+Permite executar relatórios através das regras. No HCM a função tem **apenas dois parâmetros** (não há parâmetro de ordenação) e é usada em conjunto com as funções que preenchem a tela de entrada:
+
+| Função | Uso |
+|--------|-----|
+| `SetaNumeroTelaEntrada(Alfa NomeCampo, Numero Valor);` | Passa valor para campo numérico da entrada |
+| `SetaDataTelaEntrada(Alfa NomeCampo, Numero Valor);` | Passa valor para campo do tipo Data da entrada |
+| `SetaAlfaTelaEntrada(Alfa NomeCampo, Alfa Valor);` | Passa valor para campo alfanumérico da entrada |
+| `EscondeCampoTelaEntrada(Alfa NomeCampo);` | Esconde um campo da tela de entrada (usar quando só alguns campos devem ser ocultados) |
+
+**Sintaxe:**
+
+```lsp
+ExecutaRelatorio(Alfa NomeModelo, Alfa ExibirTelaEntrada);
+```
+
+**Parâmetros:**
+
+| Nome | Tipo | Descrição |
+|------|------|-----------|
+| `NomeModelo` | Alfa | Nome do modelo. |
+| `ExibirTelaEntrada` | Alfa | Indica se a tela de entrada do modelo será mostrada: `"S"` = Sim, `"N"` = Não. |
+
+> A documentação oficial do HCM lista `ExibirTelaEntrada` como "Numérico" na tabela de parâmetros, mas a sintaxe e os exemplos usam Alfa (`"S"`/`"N"`).
+
+**Exemplo** (regra da ação executada por um botão):
+
+```lsp
+SetaDataTelaEntrada("EDatFim", DatSis);   @ campo do tipo Data @
+SetaAlfaTelaEntrada("EMosUsu", "S");      @ campo do tipo Alfa @
+SetaNumeroTelaEntrada("ESeqImp", 5);      @ campo do tipo Numero @
+
+EscondeCampoTelaEntrada("EMosUsu");       @ o campo será escondido @
+EscondeCampoTelaEntrada("EDatFim");
+
+@ Gera o HRAC001.GER sem exibir a tela de entrada @
+ExecutaRelatorio("HRAC001.GER", "N");
+```
+
+Executar o modelo 26 da categoria "CL" do módulo Controle de Ponto e Refeitório, exibindo a tela de entrada:
+
+```lsp
+ExecutaRelatorio("HRCL026.GER", "S");
+```
+
+**Utilização:** Regras e Processos Automáticos.
+
+**⚠️ Observações (HCM):**
+
+- Com `ExibirTelaEntrada = "N"`, se alguma entrada não for informada via regra e estiver marcada com **Relacionar SQL**, o relatório usa os valores salvos na propriedade **Salvar Entrada** do modelo, que precisa estar como **Verdadeiro**.
+- Ao ser chamado por esta função, o botão **Repetir** fica escondido na visualização do relatório, porque a execução pode depender de valores alterados pela regra. Para repetir, execute a regra novamente.
+- Em módulos **Web 5.0** ou **processos automáticos**, a tela de entrada não é apresentada: o modelo deve estar configurado com saída para arquivo, os valores de entrada devem ser passados por `SetaAlfaTelaEntrada`, `SetaDataTelaEntrada` e `SetaNumeroTelaEntrada`, e `ExibirTelaEntrada` deve ser `"N"` na Web 5.0.
+- A compilação do relatório é específica de cada módulo; não é recomendado executar relatório de outro módulo.
+- O relatório **Relação INSS - FPRE001.PRE** não pode ser listado por esta função (relatório não padrão).
+
 ### **Personalização do Nome do Arquivo Gerado**
 
 É possível alterar o nome do arquivo gerado pelo relatório utilizando a variável **vNomeRelatorio**.
